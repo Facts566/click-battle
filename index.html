@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Click Battle — Кликер с донатом</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            padding: 25px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #ffd966;
+            font-size: 2em;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        /* Авторизация */
+        .auth-box {
+            margin: 20px 0;
+        }
+
+        .auth-box input {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 30px;
+            width: 70%;
+            text-align: center;
+            background: #fff;
+        }
+
+        .auth-box button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 30px;
+            background: #ffd966;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .auth-box button:hover {
+            transform: scale(1.02);
+        }
+
+        /* Игровая зона */
+        .player-info {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 30px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .player-name {
+            font-size: 1.2em;
+            color: #ffd966;
+        }
+
+        .clicks-count {
+            font-size: 3em;
+            font-weight: bold;
+            color: #fff;
+            margin: 10px 0;
+        }
+
+        .clicks-count span {
+            color: #ffd966;
+            font-size: 1.2em;
+        }
+
+        .boost-status {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 10px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .boost-status.active {
+            background: #2b5e3b;
+            color: #a3e635;
+        }
+
+        /* Клик-область */
+        .click-area {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.05s linear;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .click-area:active {
+            transform: scale(0.97);
+        }
+
+        .coin {
+            font-size: 4.5em;
+        }
+
+        .click-area p {
+            color: white;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Кнопка буста */
+        .boost-btn {
+            background: linear-gradient(95deg, #ff5e62, #ff9966);
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            margin: 15px 0;
+            transition: transform 0.2s;
+        }
+
+        .boost-btn:hover {
+            transform: scale(1.02);
+        }
+
+        /* Топ игроков */
+        .top-players {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 25px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .top-players h3 {
+            color: #ffd966;
+            margin-bottom: 10px;
+        }
+
+        .top-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .top-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .top-item.you {
+            background: rgba(255, 217, 102, 0.3);
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .rank {
+            color: #ffd966;
+            margin-right: 10px;
+        }
+
+        /* Модальное окно оплаты */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1e2a3a;
+            border-radius: 30px;
+            padding: 25px;
+            max-width: 350px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid #ffd966;
+        }
+
+        .modal-content h3 {
+            color: #ffd966;
+            margin-bottom: 15px;
+        }
+
+        .card-number {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #ffd966;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #ffd966;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .comment-hint {
+            background: #facc1533;
+            padding: 10px;
+            border-radius: 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .close-modal {
+            background: #ff5e62;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Кнопка сброса (для теста) */
+        .reset-btn {
+            background: transparent;
+            border: 1px solid #666;
+            color: #888;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        footer {
+            font-size: 0.7em;
+            color: #666;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 CLICK BATTLE 💰</h1>
+        <p class="subtitle">Кто больше накликает — тот победит!</p>
+
+        <!-- Экран входа -->
+        <div id="authScreen">
+            <div class="auth-box">
+                <input type="text" id="usernameInput" placeholder="Введи свой никнейм" maxlength="20">
+                <br>
+                <button onclick="login()">🔥 НАЧАТЬ ИГРУ 🔥</button>
+            </div>
+        </div>
+
+        <!-- Игровой экран (скрыт сначала) -->
+        <div id="gameScreen" style="display: none;">
+            <div class="player-info">
+                <div class="player-name">👤 <span id="playerName"></span></div>
+                <div class="clicks-count">🖱️ <span id="clicksCount">0</span></div>
+                <div class="boost-status" id="boostStatus">
+                    ❌ Буст не активен
+                </div>
+            </div>
+
+            <div class="click-area" onclick="makeClick()">
+                <div class="coin">💰</div>
+                <p>КЛИКАЙ!</p>
+            </div>
+
+            <button class="boost-btn" onclick="showPaymentModal()">
+                ⚡ КУПИТЬ БУСТ (x2) — 49 ₽ ⚡
+            </button>
+
+            <div class="top-players">
+                <h3>🏆 ТОП-10 ИГРОКОВ 🏆</h3>
+                <div class="top-list" id="topList">
+                    <div style="text-align: center; color: #888;">Загрузка...</div>
+                </div>
+            </div>
+
+            <button class="reset-btn" onclick="resetGame()">🔄 Сбросить свои клики</button>
+            <footer>После оплаты буст активируется вручную в течение 5-10 минут</footer>
+        </div>
+    </div>
+
+    <!-- Модальное окно с картой -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <h3>💳 ОПЛАТА БУСТА</h3>
+            <p>Переведите <strong style="color:#ffd966;">49 ₽</strong> на карту Сбербанк:</p>
+            <div class="card-number">
+                2202 2023 0207 3550
+            </div>
+            <button class="copy-btn" onclick="copyCardNumber()">📋 Скопировать номер</button>
+            <div class="comment-hint">
+                ⚠️ <strong>ВАЖНО!</strong> ⚠️<br>
+                В комментарии к переводу <strong>обязательно укажи свой ник:</strong><br>
+                <span style="background:#000; padding:5px 10px; border-radius:10px; display:inline-block; margin-top:5px;" id="commentNick">никнейм</span>
+            </div>
+            <p style="font-size: 0.8em; color: #aaa;">Получатель: Максимов Дмитрий</p>
+            <p style="font-size: 0.8em; color: #ffd966;">После перевода буст активируется вручную!</p>
+            <button class="close-modal" onclick="closePaymentModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== ИГРОВАЯ ЛОГИКА ==========
+        let currentPlayer = null;
+
+        // Загрузка данных из localStorage
+        function loadPlayers() {
+            const data = localStorage.getItem('clickBattle_players');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function savePlayers(players) {
+            localStorage.setItem('clickBattle_players', JSON.stringify(players));
+        }
+
+        function getPlayer(username) {
+            const players = loadPlayers();
+            return players.find(p => p.username === username);
+        }
+
+        function createPlayer(username) {
+            const players = loadPlayers();
+            if (!players.find(p => p.username === username)) {
+                players.push({
+                    username: username,
+                    clicks: 0,
+                    boostEnd: null
+                });
+                savePlayers(players);
+            }
+            return getPlayer(username);
+        }
+
+        function updatePlayer(username, data) {
+            const players = loadPlayers();
+            const index = players.findIndex(p => p.username === username);
+            if (index !== -1) {
+                players[index] = { ...players[index], ...data };
+                savePlayers(players);
+            }
+        }
+
+        function getTopPlayers() {
+            const players = loadPlayers();
+            return players.sort((a, b) => b.clicks - a.clicks).slice(0, 10);
+        }
+
+        function hasActiveBoost(username) {
+            const player = getPlayer(username);
+            if (!player || !player.boostEnd) return false;
+            return new Date(player.boostEnd) > new Date();
+        }
+
+        // Вход в игру
+        function login() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) {
+                alert('Введи никнейм!');
+                return;
+            }
+            
+            let player = getPlayer(username);
+            if (!player) {
+                player = createPlayer(username);
+            }
+            
+            currentPlayer = {
+                username: player.username,
+                clicks: player.clicks,
+                boostEnd: player.boostEnd
+            };
+            
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            document.getElementById('playerName').innerText = currentPlayer.username;
+            
+            updateUI();
+            updateTopList();
+        }
+
+        // Клик
+        function makeClick() {
+            if (!currentPlayer) return;
+            
+            const multiplier = hasActiveBoost(currentPlayer.username) ? 2 : 1;
+            const addPoints = multiplier;
+            
+            currentPlayer.clicks += addPoints;
+            updatePlayer(currentPlayer.username, { clicks: currentPlayer.clicks });
+            
+            updateUI();
+            
+            // Анимация клика
+            const clickArea = document.querySelector('.click-area');
+            clickArea.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                clickArea.style.transform = '';
+            }, 100);
+            
+            updateTopList();
+        }
+
+        // Обновление интерфейса
+        function updateUI() {
+            if (!currentPlayer) return;
+            
+            document.getElementById('clicksCount').innerText = currentPlayer.clicks;
+            
+            const boostDiv = document.getElementById('boostStatus');
+            const hasBoost = hasActiveBoost(currentPlayer.username);
+            
+            if (hasBoost) {
+                const player = getPlayer(currentPlayer.username);
+                const endDate = new Date(player.boostEnd);
+                const hoursLeft = Math.floor((endDate - new Date()) / 3600000);
+                const minutesLeft = Math.floor(((endDate - new Date()) % 3600000) / 60000);
+                boostDiv.innerHTML = `⚡ БУСТ АКТИВЕН! x2 КЛИКИ ⚡<br>⏰ Осталось: ${hoursLeft}ч ${minutesLeft}м`;
+                boostDiv.classList.add('active');
+            } else {
+                boostDiv.innerHTML = '❌ Буст не активен. Купи x2 за 49 ₽!';
+                boostDiv.classList.remove('active');
+            }
+        }
+
+        // Топ игроков
+        function updateTopList() {
+            const top = getTopPlayers();
+            const topDiv = document.getElementById('topList');
+            
+            if (top.length === 0) {
+                topDiv.innerHTML = '<div style="text-align: center; color: #888;">Пока никого нет</div>';
+                return;
+            }
+            
+            let html = '';
+            top.forEach((player, index) => {
+                const isYou = currentPlayer && player.username === currentPlayer.username;
+                html += `
+                    <div class="top-item ${isYou ? 'you' : ''}">
+                        <span><span class="rank">${index + 1}.</span> ${player.username}</span>
+                        <span>🖱️ ${player.clicks}</span>
+                    </div>
+                `;
+            });
+            topDiv.innerHTML = html;
+        }
+
+        // ========== ОПЛАТА ==========
+        const CARD_NUMBER = "2202 2023 0207 3550";
+        
+        function showPaymentModal() {
+            if (!currentPlayer) return;
+            
+            const modal = document.getElementById('paymentModal');
+            const commentSpan = document.getElementById('commentNick');
+            commentSpan.innerText = currentPlayer.username;
+            modal.style.display = 'flex';
+        }
+        
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+        
+        function copyCardNumber() {
+            const number = CARD_NUMBER.replace(/\s/g, '');
+            navigator.clipboard.writeText(number);
+            alert('Номер карты скопирован!');
+        }
+        
+        // ========== РУЧНАЯ АКТИВАЦИЯ БУСТА (для админа) ==========
+        // Вызывай эту функцию в консоли браузера или сделай отдельную админку
+        window.activateBoost = function(username, hours = 24) {
+            const player = getPlayer(username);
+            if (!player) {
+                console.log(`❌ Игрок ${username} не найден`);
+                return false;
+            }
+            
+            const boostEnd = new Date();
+            boostEnd.setHours(boostEnd.getHours() + hours);
+            
+            updatePlayer(username, { boostEnd: boostEnd.toISOString() });
+            
+            // Обновляем текущего игрока, если это он
+            if (currentPlayer && currentPlayer.username === username) {
+                currentPlayer.boostEnd = boostEnd.toISOString();
+                updateUI();
+            }
+            
+            console.log(`✅ Буст активирован для ${username} на ${hours} часов`);
+            updateTopList();
+            return true;
+        };
+        
+        // ========== СБРОС (для теста) ==========
+        function resetGame() {
+            if (!currentPlayer) return;
+            if (confirm('Сбросить все свои клики? Буст останется активным.')) {
+                currentPlayer.clicks = 0;
+                updatePlayer(currentPlayer.username, { clicks: 0 });
+                updateUI();
+                updateTopList();
+            }
+        }
+        
+        // Обновляем топ каждые 5 секунд
+        setInterval(() => {
+            if (currentPlayer) {
+                updateTopList();
+                updateUI();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
